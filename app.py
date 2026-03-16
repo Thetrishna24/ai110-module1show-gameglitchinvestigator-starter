@@ -35,16 +35,16 @@ def check_guess(guess, secret):
 
     try:
         if guess > secret:
-            return "Too High", "📈 Go HIGHER!"
+            return "Too High", "📈 Go LOWER!"
         else:
-            return "Too Low", "📉 Go LOWER!"
+            return "Too Low", "📉 Go HIGHER!"
     except TypeError:
         g = str(guess)
         if g == secret:
             return "Win", "🎉 Correct!"
         if g > secret:
-            return "Too High", "📈 Go HIGHER!"
-        return "Too Low", "📉 Go LOWER!"
+            return "Too High", "📈 Go LOWER!"
+        return "Too Low", "📉 Go HIGHER!"
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
@@ -92,8 +92,10 @@ st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
+# FIX: Ensured attempts start at 0 so UI "Attempts left" matches the debug panel.
+# Verified by manually testing guesses and comparing both counters.
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 1
+    st.session_state.attempts = 0
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -107,7 +109,7 @@ if "history" not in st.session_state:
 st.subheader("Make a guess")
 
 st.info(
-    f"Guess a number between 1 and 100. "
+    f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
@@ -154,11 +156,16 @@ if submit:
         st.error(err)
     else:
         st.session_state.history.append(guess_int)
+        
+        # FIX: Removed conversion of secret to string. AI suggested that passing a string
+        # caused the fallback logic in check_guess() to reverse the hint direction.
+        # Keeping secret as an integer fixes the incorrect "Go HIGHER/LOWER" hints.
+        secret = st.session_state.secret
 
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
+        # if st.session_state.attempts % 2 == 0:
+        #     secret = str(st.session_state.secret)
+        # else:
+        #     secret = st.session_state.secret
 
         outcome, message = check_guess(guess_int, secret)
 
